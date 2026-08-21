@@ -1,0 +1,187 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agen — Chat</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f7f9; --surface: #ffffff; --ink: #1a1e27; --muted: #5b6472;
+    --border: #d8dce3; --accent: #a8631d; --accent-bg: #fdf3e7;
+    --bubble-user: #eef1f5; --bubble-agen: #ffffff; --bad: #a8402f; --bad-bg: #fdf0ee;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14171c; --surface: #1c2028; --ink: #e7eaf0; --muted: #9aa3b2;
+      --border: #333a46; --accent: #e0a45c; --accent-bg: #2c2113;
+      --bubble-user: #262b34; --bubble-agen: #1c2028; --bad: #e08072; --bad-bg: #2a1815;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14171c; --surface: #1c2028; --ink: #e7eaf0; --muted: #9aa3b2;
+    --border: #333a46; --accent: #e0a45c; --accent-bg: #2c2113;
+    --bubble-user: #262b34; --bubble-agen: #1c2028; --bad: #e08072; --bad-bg: #2a1815;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: "Archivo", sans-serif;
+    display: flex; flex-direction: column; height: 100vh;
+  }
+  header {
+    padding: 16px 20px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: baseline; justify-content: space-between;
+    background: var(--surface);
+  }
+  header .name { font-weight: 700; font-size: 17px; }
+  header .role {
+    font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--muted);
+    letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  header a {
+    font-size: 12.5px; color: var(--muted); text-decoration: none;
+    font-family: "IBM Plex Mono", monospace;
+  }
+  header a:hover { color: var(--ink); }
+
+  #log {
+    flex: 1; overflow-y: auto; padding: 20px; display: flex;
+    flex-direction: column; gap: 10px; max-width: 720px; margin: 0 auto; width: 100%;
+  }
+  .msg {
+    max-width: 78%; padding: 10px 14px; border-radius: 12px;
+    font-size: 14.5px; line-height: 1.5; border: 1px solid var(--border);
+    white-space: pre-wrap;
+  }
+  .msg.user { align-self: flex-end; background: var(--bubble-user); border-bottom-right-radius: 3px; }
+  .msg.agen { align-self: flex-start; background: var(--bubble-agen); border-bottom-left-radius: 3px; }
+  .msg.system {
+    align-self: center; background: var(--accent-bg); border-color: var(--accent);
+    color: var(--accent); font-family: "IBM Plex Mono", monospace; font-size: 12.5px;
+    text-align: center; max-width: 90%;
+  }
+  .msg.error {
+    align-self: center; background: var(--bad-bg); border-color: var(--bad);
+    color: var(--bad); font-family: "IBM Plex Mono", monospace; font-size: 12.5px;
+    text-align: center; max-width: 90%;
+  }
+
+  form {
+    display: flex; gap: 10px; padding: 16px 20px; border-top: 1px solid var(--border);
+    background: var(--surface); max-width: 720px; margin: 0 auto; width: 100%;
+  }
+  input[type=text] {
+    flex: 1; padding: 11px 14px; border-radius: 9px; border: 1px solid var(--border);
+    background: var(--bg); color: var(--ink); font-family: inherit; font-size: 14.5px;
+  }
+  input[type=text]:disabled { opacity: 0.5; }
+  button {
+    padding: 11px 18px; border-radius: 9px; border: none; background: var(--ink);
+    color: var(--bg); font-family: inherit; font-weight: 600; font-size: 14px;
+    cursor: pointer;
+  }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+</style>
+</head>
+<body>
+  <header>
+    <div>
+      <div class="name">Agen</div>
+      <div class="role">business user — chat interface</div>
+    </div>
+    <a href="/review" target="_blank">reviewer approves elsewhere →</a>
+  </header>
+
+  <div id="log"></div>
+
+  <form id="form">
+    <input id="input" type="text" placeholder="Tell Agen about your business…" autocomplete="off">
+    <button id="send" type="submit">Send</button>
+  </form>
+
+<script>
+// A random per-tab session id, sent on every call so AgentOS keeps this
+// conversation (and any paused run inside it) addressable across requests.
+const sessionId = crypto.randomUUID();
+const AGENT_ID = "agen";
+
+const log = document.getElementById("log");
+const form = document.getElementById("form");
+const input = document.getElementById("input");
+const sendBtn = document.getElementById("send");
+
+function addMsg(role, text) {
+  const el = document.createElement("div");
+  el.className = "msg " + role;
+  el.textContent = text;
+  log.appendChild(el);
+  log.scrollTop = log.scrollHeight;
+  return el;
+}
+
+function setInputEnabled(enabled) {
+  input.disabled = !enabled;
+  sendBtn.disabled = !enabled;
+  if (enabled) input.focus();
+}
+
+async function createRun(message) {
+  const body = new URLSearchParams({ message, session_id: sessionId, stream: "false" });
+  const res = await fetch(`/agents/${AGENT_ID}/runs`, { method: "POST", body });
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+async function getRun(runId) {
+  const res = await fetch(`/agents/${AGENT_ID}/runs/${runId}?session_id=${sessionId}`);
+  if (!res.ok) throw new Error(await res.text());
+  return res.json();
+}
+
+function replyText(run) {
+  return typeof run.content === "string" ? run.content : JSON.stringify(run.content);
+}
+
+async function pollUntilUnpaused(runId) {
+  const waitMsg = addMsg("system", "Agen wants to generate the chatbot -- waiting for a human reviewer to approve or decline this, over on the review page…");
+  while (true) {
+    await new Promise(r => setTimeout(r, 1500));
+    const run = await getRun(runId);
+    if (run.status !== "PAUSED") {
+      waitMsg.remove();
+      addMsg("agen", replyText(run));
+      break;
+    }
+  }
+}
+
+form.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = "";
+  addMsg("user", text);
+  setInputEnabled(false);
+
+  try {
+    const run = await createRun(text);
+    if (run.status === "PAUSED") {
+      await pollUntilUnpaused(run.run_id);
+    } else {
+      addMsg("agen", replyText(run));
+    }
+  } catch (err) {
+    addMsg("error", "Something went wrong talking to Agen: " + err.message);
+  } finally {
+    setInputEnabled(true);
+  }
+});
+
+addMsg("agen", "Hi, I'm Agen. Tell me about the business and what you want the chatbot to do.");
+input.focus();
+</script>
+</body>
+</html>

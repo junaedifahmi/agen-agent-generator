@@ -1,0 +1,14 @@
+[project]
+name = "agen-agent-generator"
+version = "0.1.0"
+description = "Agen: an Agno-based elicitor agent that converts business requirements into a technical YAML spec for chatbot generation."
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    "agno[os]>=2.9.0",
+    "openai>=1.0.0",
+    "pyyaml>=6.0",
+    "pydantic>=2.7",
+    "python-dotenv>=1.0",
+    "sqlalchemy>=2.0",
+]

@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Agen — Review</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f6f7f9; --surface: #ffffff; --ink: #1a1e27; --muted: #5b6472;
+    --border: #d8dce3; --accent: #a8631d; --accent-bg: #fdf3e7;
+    --good: #2f7a4f; --good-bg: #eaf6ee; --bad: #a8402f; --bad-bg: #fdf0ee;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #14171c; --surface: #1c2028; --ink: #e7eaf0; --muted: #9aa3b2;
+      --border: #333a46; --accent: #e0a45c; --accent-bg: #2c2113;
+      --good: #6bc492; --good-bg: #16281f; --bad: #e08072; --bad-bg: #2a1815;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #14171c; --surface: #1c2028; --ink: #e7eaf0; --muted: #9aa3b2;
+    --border: #333a46; --accent: #e0a45c; --accent-bg: #2c2113;
+    --good: #6bc492; --good-bg: #16281f; --bad: #e08072; --bad-bg: #2a1815;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: "Archivo", sans-serif; min-height: 100vh;
+  }
+  header {
+    padding: 16px 20px; border-bottom: 1px solid var(--border);
+    display: flex; align-items: baseline; justify-content: space-between;
+    background: var(--surface);
+  }
+  header .name { font-weight: 700; font-size: 17px; }
+  header .role {
+    font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--muted);
+    letter-spacing: 0.06em; text-transform: uppercase;
+  }
+  header a { font-size: 12.5px; color: var(--muted); text-decoration: none; font-family: "IBM Plex Mono", monospace; }
+  header a:hover { color: var(--ink); }
+
+  main { max-width: 760px; margin: 0 auto; padding: 28px 20px 60px; }
+  .empty {
+    text-align: center; color: var(--muted); padding: 60px 20px;
+    font-size: 14.5px; line-height: 1.6;
+  }
+  .empty .big { font-size: 28px; margin-bottom: 10px; }
+
+  .card {
+    border: 1.6px solid var(--accent);
+    background: var(--accent-bg);
+    border-radius: 12px; padding: 18px 20px; margin-bottom: 16px;
+  }
+  .card .label {
+    font-family: "IBM Plex Mono", monospace; font-size: 11px; letter-spacing: 0.06em;
+    text-transform: uppercase; color: var(--accent); margin-bottom: 6px;
+  }
+  .card .tool {
+    font-family: "IBM Plex Mono", monospace; font-size: 15px; font-weight: 500;
+    color: var(--ink); margin-bottom: 12px;
+  }
+  .card pre {
+    background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+    padding: 10px 12px; font-family: "IBM Plex Mono", monospace; font-size: 12px;
+    color: var(--muted); overflow-x: auto; margin: 0 0 14px;
+  }
+  .card .session {
+    font-family: "IBM Plex Mono", monospace; font-size: 11px; color: var(--muted); margin-bottom: 14px;
+  }
+  .actions { display: flex; gap: 10px; }
+  button {
+    flex: 1; padding: 10px 16px; border-radius: 8px; border: none;
+    font-family: inherit; font-weight: 600; font-size: 13.5px; cursor: pointer;
+  }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .approve { background: var(--good); color: var(--good-bg); }
+  .decline { background: var(--bad); color: var(--bad-bg); }
+</style>
+</head>
+<body>
+  <header>
+    <div>
+      <div class="name">Agen — Review</div>
+      <div class="role">human reviewer — separate from the chat</div>
+    </div>
+    <a href="/" target="_blank">← business user chats over there</a>
+  </header>
+
+  <main id="main">
+    <div class="empty"><div class="big">—</div>nothing waiting for review right now</div>
+  </main>
+
+<script>
+// Talks directly to AgentOS's built-in, DB-backed approvals API -- it's
+// cross-session by design (GET /approvals lists pending approvals from
+// *every* chat session, not just one), which is what a real reviewer
+// needs: they show up here without ever having to know a session id.
+const AGENT_ID = "agen";
+const main = document.getElementById("main");
+let busy = new Set();
+
+function render(items) {
+  if (items.length === 0) {
+    main.innerHTML = '<div class="empty"><div class="big">—</div>nothing waiting for review right now</div>';
+    return;
+  }
+  main.innerHTML = "";
+  for (const item of items) {
+    const card = document.createElement("div");
+    card.className = "card";
+    const disabled = busy.has(item.id) ? "disabled" : "";
+    card.innerHTML = `
+      <div class="label">Agen wants to run</div>
+      <div class="tool">${item.tool_name ?? "generate_chatbot_now"}</div>
+      <pre>${JSON.stringify(item.tool_args ?? {}, null, 2)}</pre>
+      <div class="session">session ${item.session_id} — run ${item.run_id}</div>
+      <div class="actions">
+        <button class="approve" data-id="${item.id}" data-status="approved" ${disabled}>Approve — generate it</button>
+        <button class="decline" data-id="${item.id}" data-status="rejected" ${disabled}>Decline</button>
+      </div>
+    `;
+    main.appendChild(card);
+  }
+  main.querySelectorAll("button").forEach(btn => {
+    btn.addEventListener("click", () => decide(btn.dataset.id, btn.dataset.status));
+  });
+}
+
+async function decide(approvalId, status) {
+  busy.add(approvalId);
+  try {
+    // 1. Resolve the approval record itself.
+    const resolveRes = await fetch(`/approvals/${approvalId}/resolve`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status, resolved_by: "human-reviewer" }),
+    });
+    if (!resolveRes.ok) throw new Error(await resolveRes.text());
+    const approval = await resolveRes.json();
+
+    // 2. Actually resume the paused run -- resolving the approval record
+    //    alone doesn't do this. Calling /continue with no tools payload
+    //    makes Agno look up this now-resolved approval by run_id and apply
+    //    it automatically (agno.run.approval.check_and_apply_approval_resolution).
+    const continueBody = new URLSearchParams({
+      session_id: approval.session_id,
+      stream: "false",
+    });
+    const continueRes = await fetch(`/agents/${AGENT_ID}/runs/${approval.run_id}/continue`, {
+      method: "POST",
+      body: continueBody,
+    });
+    if (!continueRes.ok) throw new Error(await continueRes.text());
+  } catch (err) {
+    alert("Couldn't resolve that approval: " + err.message);
+  } finally {
+    busy.delete(approvalId);
+    refresh();
+  }
+}
+
+async function refresh() {
+  const res = await fetch(`/approvals?status=pending&agent_id=${AGENT_ID}`);
+  const data = await res.json();
+  render(data.data || []);
+}
+
+refresh();
+setInterval(refresh, 2000);
+</script>
+</body>
+</html>

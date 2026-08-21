@@ -1,0 +1,776 @@
+<title>Agen Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #f6f3ee;
+    --surface: #ffffff;
+    --surface-2: #efeae2;
+    --ink: #211d18;
+    --muted: #75706a;
+    --border: #ddd6cb;
+    --accent: #b5651d;
+    --accent-ink: #ffffff;
+    --accent-soft: #fbf0e2;
+    --accent-soft-border: #e7c69a;
+    --good: #3d7a4f;
+    --good-soft: #e7f3ea;
+    --bad: #a8402f;
+    --bad-soft: #fbeae7;
+    --bubble-user: #efeae2;
+    --bubble-agen: #ffffff;
+    --shadow: 0 1px 2px rgba(33, 29, 24, 0.06), 0 8px 24px rgba(33, 29, 24, 0.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #171512;
+      --surface: #201d19;
+      --surface-2: #29251f;
+      --ink: #f1ede5;
+      --muted: #9c948a;
+      --border: #3a352c;
+      --accent: #e2a563;
+      --accent-ink: #241a0c;
+      --accent-soft: #2c2013;
+      --accent-soft-border: #4d3a20;
+      --good: #7fc298;
+      --good-soft: #1c2a20;
+      --bad: #e08e7c;
+      --bad-soft: #2c1c18;
+      --bubble-user: #29251f;
+      --bubble-agen: #201d19;
+      --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #171512;
+    --surface: #201d19;
+    --surface-2: #29251f;
+    --ink: #f1ede5;
+    --muted: #9c948a;
+    --border: #3a352c;
+    --accent: #e2a563;
+    --accent-ink: #241a0c;
+    --accent-soft: #2c2013;
+    --accent-soft-border: #4d3a20;
+    --good: #7fc298;
+    --good-soft: #1c2a20;
+    --bad: #e08e7c;
+    --bad-soft: #2c1c18;
+    --bubble-user: #29251f;
+    --bubble-agen: #201d19;
+    --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 8px 24px rgba(0, 0, 0, 0.35);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Archivo", sans-serif;
+    display: flex;
+    flex-direction: column;
+  }
+  .mono { font-family: "IBM Plex Mono", ui-monospace, monospace; }
+
+  /* ---------- shell ---------- */
+  .shell {
+    max-width: 920px;
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 100vh;
+  }
+  header.top {
+    padding: 22px 22px 0;
+  }
+  .brand {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .brand h1 {
+    font-size: 21px;
+    font-weight: 700;
+    margin: 0;
+    letter-spacing: -0.01em;
+  }
+  .brand .tag {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11.5px;
+    color: var(--muted);
+    letter-spacing: 0.04em;
+  }
+  .note {
+    margin: 10px 0 18px;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.55;
+    border-left: 2px solid var(--border);
+    padding-left: 12px;
+  }
+  .note strong { color: var(--ink); font-weight: 600; }
+
+  /* ---------- tabs ---------- */
+  .tabs {
+    display: flex;
+    gap: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  .tab {
+    appearance: none;
+    border: none;
+    background: none;
+    font-family: "Archivo", sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--muted);
+    padding: 11px 16px;
+    border-radius: 9px 9px 0 0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    position: relative;
+    top: 1px;
+  }
+  .tab.active {
+    color: var(--ink);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-bottom: 1px solid var(--surface);
+  }
+  .tab .dot {
+    width: 6px; height: 6px; border-radius: 50%; background: var(--muted);
+  }
+  .tab.active .dot.chat { background: #5a8fd6; }
+  .tab.active .dot.review { background: var(--accent); }
+  .pill {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10.5px;
+    font-weight: 500;
+    background: var(--accent);
+    color: var(--accent-ink);
+    border-radius: 999px;
+    padding: 1px 7px;
+    line-height: 1.5;
+  }
+
+  main {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-top: none;
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+  }
+  .view { display: none; flex: 1; min-height: 0; flex-direction: column; }
+  .view.active { display: flex; }
+
+  /* ---------- chat view ---------- */
+  #log {
+    flex: 1;
+    overflow-y: auto;
+    padding: 22px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .msg {
+    max-width: 80%;
+    padding: 11px 15px;
+    border-radius: 13px;
+    font-size: 14.5px;
+    line-height: 1.55;
+    border: 1px solid var(--border);
+    white-space: pre-wrap;
+  }
+  .msg.user {
+    align-self: flex-end;
+    background: var(--bubble-user);
+    border-bottom-right-radius: 3px;
+  }
+  .msg.agen {
+    align-self: flex-start;
+    background: var(--bubble-agen);
+    border-bottom-left-radius: 3px;
+    box-shadow: var(--shadow);
+  }
+  .msg.agen .who {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10.5px;
+    color: var(--muted);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .msg.wait {
+    align-self: center;
+    background: var(--accent-soft);
+    border-color: var(--accent-soft-border);
+    color: var(--accent);
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 12.5px;
+    text-align: center;
+    max-width: 92%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .pulse {
+    width: 7px; height: 7px; border-radius: 50%; background: var(--accent);
+    animation: pulse 1.4s ease-in-out infinite;
+    flex: none;
+  }
+  @keyframes pulse {
+    0%, 100% { opacity: 0.35; transform: scale(0.85); }
+    50% { opacity: 1; transform: scale(1); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .pulse { animation: none; opacity: 1; }
+  }
+
+  .quick {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 0 22px 14px;
+  }
+  .quick button {
+    appearance: none;
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--ink);
+    font-family: "Archivo", sans-serif;
+    font-size: 13.5px;
+    font-weight: 500;
+    padding: 8px 14px;
+    border-radius: 8px;
+    cursor: pointer;
+  }
+  .quick button:hover { border-color: var(--accent); }
+  .quick button.primary {
+    background: var(--accent);
+    color: var(--accent-ink);
+    border-color: var(--accent);
+    font-weight: 600;
+  }
+  .chips {
+    display: flex; flex-wrap: wrap; gap: 6px; padding: 0 22px 14px;
+  }
+  .chip {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11.5px;
+    background: var(--good-soft);
+    color: var(--good);
+    border: 1px solid var(--border);
+    padding: 4px 9px;
+    border-radius: 999px;
+  }
+
+  form#composer {
+    display: flex;
+    gap: 10px;
+    padding: 14px 22px 20px;
+    border-top: 1px solid var(--border);
+  }
+  form#composer input {
+    flex: 1;
+    padding: 11px 14px;
+    border-radius: 9px;
+    border: 1px solid var(--border);
+    background: var(--paper);
+    color: var(--ink);
+    font-family: inherit;
+    font-size: 14.5px;
+  }
+  form#composer input:disabled { opacity: 0.5; }
+  form#composer button {
+    padding: 11px 18px;
+    border-radius: 9px;
+    border: none;
+    background: var(--ink);
+    color: var(--paper);
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+  }
+  form#composer button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* ---------- review view ---------- */
+  #reviewMain {
+    flex: 1;
+    overflow-y: auto;
+    padding: 24px 22px;
+  }
+  .empty {
+    text-align: center;
+    color: var(--muted);
+    padding: 60px 20px;
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  .empty .big { font-size: 26px; margin-bottom: 10px; }
+  .card {
+    border: 1px solid var(--accent-soft-border);
+    background: var(--accent-soft);
+    border-radius: 13px;
+    padding: 18px 20px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow);
+  }
+  .card .label {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 10.5px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .card .toolname {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 15px;
+    font-weight: 500;
+    margin-bottom: 12px;
+  }
+  .card .spec {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 12px 14px;
+    font-size: 13px;
+    line-height: 1.7;
+    margin: 0 0 14px;
+  }
+  .card .spec dt {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    display: inline-block;
+    width: 108px;
+  }
+  .card .spec dd { display: inline; margin: 0; }
+  .card .spec .row { display: block; }
+  .card .meta {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+  .actions { display: flex; gap: 10px; }
+  .actions button {
+    flex: 1;
+    padding: 10px 16px;
+    border-radius: 8px;
+    border: none;
+    font-family: inherit;
+    font-weight: 600;
+    font-size: 13.5px;
+    cursor: pointer;
+  }
+  .approve { background: var(--good); color: var(--good-soft); }
+  .decline { background: var(--bad); color: var(--bad-soft); }
+
+  .history-heading {
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin: 22px 0 10px;
+  }
+  .history-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    margin-bottom: 8px;
+    font-size: 13px;
+  }
+  .status-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+  .status-dot.approved { background: var(--good); }
+  .status-dot.declined { background: var(--bad); }
+  .history-item .tn { font-family: "IBM Plex Mono", monospace; }
+  .history-item .sess { color: var(--muted); margin-left: auto; font-family: "IBM Plex Mono", monospace; font-size: 11px; }
+</style>
+
+<div class="shell">
+  <header class="top">
+    <div class="brand">
+      <h1>Agen</h1>
+      <span class="tag">interactive demo — client-side simulation, no live model or server</span>
+    </div>
+    <p class="note">
+      This mirrors the real <strong>AgentOS</strong>-backed app in <span class="mono">demo/</span>:
+      the same two-interface split, the same pause-until-approved gate. Here the elicitation and
+      the model replies are scripted in the browser so you can see the flow without running
+      <span class="mono">uv run uvicorn demo.server:app</span> or holding an OpenRouter key.
+    </p>
+    <nav class="tabs">
+      <button class="tab active" id="tabChatBtn" onclick="showView('chat')">
+        <span class="dot chat"></span> Chat — business user
+      </button>
+      <button class="tab" id="tabReviewBtn" onclick="showView('review')">
+        <span class="dot review"></span> Review — reviewer
+        <span class="pill" id="pendingPill" hidden>1</span>
+      </button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- CHAT VIEW -->
+    <section class="view active" id="viewChat">
+      <div id="log"></div>
+      <div class="chips" id="chips" hidden></div>
+      <div class="quick" id="quick"></div>
+      <form id="composer">
+        <input id="input" type="text" placeholder="Type your answer…" autocomplete="off">
+        <button id="send" type="submit">Send</button>
+      </form>
+    </section>
+
+    <!-- REVIEW VIEW -->
+    <section class="view" id="viewReview">
+      <div id="reviewMain"></div>
+    </section>
+  </main>
+</div>
+
+<script>
+/* ------------------------------------------------------------------
+   A small scripted state machine standing in for Agen's real elicitor
+   agent + Agno's HITL pause/approve/continue cycle. The shapes here
+   (spec fields, the "generate_chatbot_now" tool name, the pending /
+   approved / declined states) match the real agent in agent/tools.py,
+   agent/generation_tool.py and agent/feature_model.py -- only the NLU
+   and the network calls are stand-ins.
+------------------------------------------------------------------- */
+
+const state = {
+  step: "greet",
+  spec: { business_name: null, connector: null, kb_mode: null, skills: [], persona_tone: null, persona_language: null },
+  pending: null,   // { id, tool_name, args, sessionId, createdAt }
+  history: [],     // resolved approvals
+};
+
+const log = document.getElementById("log");
+const quick = document.getElementById("quick");
+const chips = document.getElementById("chips");
+const input = document.getElementById("input");
+const sendBtn = document.getElementById("send");
+const composer = document.getElementById("composer");
+
+function addMsg(role, text, who) {
+  const el = document.createElement("div");
+  el.className = "msg " + role;
+  if (role === "agen") {
+    const label = document.createElement("div");
+    label.className = "who";
+    label.textContent = who || "Agen";
+    el.appendChild(label);
+    const body = document.createElement("div");
+    body.textContent = text;
+    el.appendChild(body);
+  } else {
+    el.textContent = text;
+  }
+  log.appendChild(el);
+  log.scrollTop = log.scrollHeight;
+  return el;
+}
+
+function setQuick(options) {
+  quick.innerHTML = "";
+  options.forEach(opt => {
+    const b = document.createElement("button");
+    b.textContent = opt.label;
+    if (opt.primary) b.className = "primary";
+    b.onclick = () => opt.action();
+    quick.appendChild(b);
+  });
+}
+
+function setInputEnabled(enabled, placeholder) {
+  input.disabled = !enabled;
+  sendBtn.disabled = !enabled;
+  if (placeholder) input.placeholder = placeholder;
+  if (enabled) input.focus();
+}
+
+function renderChips() {
+  const s = state.spec;
+  const parts = [];
+  if (s.business_name) parts.push(`business: ${s.business_name}`);
+  if (s.connector) parts.push(`connector: ${s.connector}`);
+  if (s.kb_mode) parts.push(`knowledge base: ${s.kb_mode}`);
+  if (s.skills.length) parts.push(`skills: ${s.skills.join(", ")}`);
+  if (s.persona_tone) parts.push(`tone: ${s.persona_tone}`);
+  if (!parts.length) { chips.hidden = true; return; }
+  chips.hidden = false;
+  chips.innerHTML = parts.map(p => `<span class="chip">${p}</span>`).join("");
+}
+
+function agen(text, delay = 550) {
+  return new Promise(resolve => {
+    setTimeout(() => { addMsg("agen", text); resolve(); }, delay);
+  });
+}
+
+/* ---------------- scripted elicitation flow ---------------- */
+
+async function begin() {
+  await agen("Hi, I'm Agen. What's the business, and what would you like the chatbot to help with?");
+  setInputEnabled(true, "e.g. Kopi Senja, a coffee shop…");
+  state.step = "business_name";
+}
+
+async function afterBusinessName(text) {
+  state.spec.business_name = text;
+  renderChips();
+  await agen(`Got it${text ? " — " + text : ""}. Where do your customers usually reach you?`);
+  setInputEnabled(false);
+  setQuick([
+    { label: "WhatsApp", action: () => pickConnector("whatsapp") },
+    { label: "Website chat", action: () => pickConnector("webapp") },
+    { label: "Telegram", action: () => pickConnector("telegram") },
+  ]);
+  state.step = "connector";
+}
+
+async function pickConnector(value) {
+  addMsg("user", ({ whatsapp: "WhatsApp", webapp: "Website chat", telegram: "Telegram" })[value]);
+  state.spec.connector = value;
+  renderChips();
+  setQuick([]);
+  await agen("Should the bot answer from documents you give it, or check live information from a system you already use — like stock or order status?");
+  setQuick([
+    { label: "From documents I give it", action: () => pickKb("vector") },
+    { label: "Check a live system", action: () => pickKb("api") },
+    { label: "Neither, keep it simple", action: () => pickKb("none") },
+  ]);
+  state.step = "kb";
+}
+
+async function pickKb(value) {
+  addMsg("user", ({ vector: "From documents I give it", api: "Check a live system", none: "Neither, keep it simple" })[value]);
+  state.spec.kb_mode = value === "none" ? null : value;
+  renderChips();
+  setQuick([]);
+  await agen("What should customers be able to get done through the bot? Tell me one thing at a time, and say \"that's all\" when you're done.");
+  setInputEnabled(true, "e.g. answering menu questions");
+  state.step = "skills";
+}
+
+async function afterSkill(text) {
+  const done = /that's all|thats all|no more|that's it|done/i.test(text);
+  if (done && state.spec.skills.length) {
+    setInputEnabled(false);
+    renderChips();
+    await agen("Good — last thing: how should it sound talking to customers?");
+    setQuick([
+      { label: "Friendly and casual", action: () => pickTone("friendly and casual") },
+      { label: "Warm and professional", action: () => pickTone("warm and professional") },
+      { label: "Formal and concise", action: () => pickTone("formal and concise") },
+    ]);
+    state.step = "tone";
+    return;
+  }
+  if (done) {
+    await agen("It needs at least one thing it can do first — what should it help with?");
+    return;
+  }
+  state.spec.skills.push(text);
+  renderChips();
+  await agen("Noted. Anything else, or is that all?", 400);
+}
+
+async function pickTone(value) {
+  addMsg("user", value.charAt(0).toUpperCase() + value.slice(1));
+  state.spec.persona_tone = value;
+  setQuick([]);
+  await agen("And should it reply in Indonesian or English?");
+  setQuick([
+    { label: "Indonesian", action: () => pickLanguage("id") },
+    { label: "English", action: () => pickLanguage("en") },
+  ]);
+  state.step = "language";
+}
+
+async function pickLanguage(value) {
+  addMsg("user", value === "id" ? "Indonesian" : "English");
+  state.spec.persona_language = value;
+  renderChips();
+  setQuick([]);
+  await summarizeAndAsk();
+}
+
+async function summarizeAndAsk() {
+  const s = state.spec;
+  const kbLine = s.kb_mode
+    ? (s.kb_mode === "vector" ? "answer from documents you give it" : "check a live system for information")
+    : "keep things simple with no lookups";
+  await agen(
+    `Here's what I've got: a ${({ whatsapp: "WhatsApp", webapp: "website", telegram: "Telegram" })[s.connector]} bot for ${s.business_name || "your business"} ` +
+    `that will ${kbLine}, help with ${s.skills.join(", ")}, and reply in ${s.persona_language === "id" ? "Indonesian" : "English"} with a ${s.persona_tone} tone. ` +
+    `Want me to generate the chatbot now?`
+  );
+  setQuick([
+    { label: "Yes, generate it", primary: true, action: requestGeneration },
+    { label: "Not yet", action: () => agen("No problem — tell me what you'd like to change.") && setInputEnabled(true, "what would you like to change?") },
+  ]);
+  state.step = "confirm";
+}
+
+async function requestGeneration() {
+  setQuick([]);
+  const approvalId = "appr_" + Math.random().toString(36).slice(2, 8);
+  const sessionId = "sess_" + Math.random().toString(36).slice(2, 8);
+  state.pending = {
+    id: approvalId,
+    sessionId,
+    tool_name: "generate_chatbot_now",
+    createdAt: new Date(),
+    spec: JSON.parse(JSON.stringify(state.spec)),
+  };
+  updatePendingPill();
+  const waitEl = document.createElement("div");
+  waitEl.className = "msg wait";
+  waitEl.innerHTML = '<span class="pulse"></span> Agen wants to run generate_chatbot_now — waiting for a human reviewer on the Review tab…';
+  log.appendChild(waitEl);
+  log.scrollTop = log.scrollHeight;
+  state.waitEl = waitEl;
+  state.step = "paused";
+  renderReview();
+}
+
+function updatePendingPill() {
+  const pill = document.getElementById("pendingPill");
+  const count = state.pending ? 1 : 0;
+  pill.hidden = count === 0;
+  pill.textContent = String(count);
+}
+
+/* Called from the Review tab once a decision is made. This is the one
+   moment the two "interfaces" touch -- exactly like the real app, where
+   that meeting point is one paused run sitting in Agen's database rather
+   than any direct connection between the two pages. */
+function resolvePending(status) {
+  const p = state.pending;
+  if (!p) return;
+  state.pending = null;
+  state.history.unshift({ ...p, status, resolvedAt: new Date() });
+  updatePendingPill();
+  renderReview();
+
+  if (state.waitEl) { state.waitEl.remove(); state.waitEl = null; }
+  if (status === "approved") {
+    addMsg("agen", `Chatbot generation started from specs/${slug(p.spec.business_name)}.yaml. You can close this tab — the reviewer just approved it on theirs.`);
+  } else {
+    addMsg("agen", "The reviewer declined that. Let me know if you'd like to change anything before asking again.");
+    setInputEnabled(true, "what would you like to change?");
+  }
+}
+
+function slug(name) {
+  return (name || "chatbot").toLowerCase().trim().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, "") || "chatbot";
+}
+
+/* ---------------- review view rendering ---------------- */
+
+function renderReview() {
+  const main = document.getElementById("reviewMain");
+  main.innerHTML = "";
+
+  if (!state.pending) {
+    const empty = document.createElement("div");
+    empty.className = "empty";
+    empty.innerHTML = '<div class="big">—</div>nothing waiting for review right now';
+    main.appendChild(empty);
+  } else {
+    const p = state.pending;
+    const s = p.spec;
+    const card = document.createElement("div");
+    card.className = "card";
+    card.innerHTML = `
+      <div class="label">
+        <span class="pulse" style="background:var(--accent)"></span> pending approval
+      </div>
+      <div class="toolname">${p.tool_name}()</div>
+      <dl class="spec">
+        <span class="row"><dt>business</dt><dd>${s.business_name || "—"}</dd></span>
+        <span class="row"><dt>connector</dt><dd>${s.connector}</dd></span>
+        <span class="row"><dt>knowledge base</dt><dd>${s.kb_mode || "none"}</dd></span>
+        <span class="row"><dt>skills</dt><dd>${s.skills.join(", ")}</dd></span>
+        <span class="row"><dt>persona</dt><dd>${s.persona_tone}, ${s.persona_language === "id" ? "Indonesian" : "English"}</dd></span>
+      </dl>
+      <div class="meta">approval ${p.id} · session ${p.sessionId}</div>
+      <div class="actions">
+        <button class="approve" onclick="resolvePending('approved')">Approve — generate it</button>
+        <button class="decline" onclick="resolvePending('declined')">Decline</button>
+      </div>
+    `;
+    main.appendChild(card);
+  }
+
+  if (state.history.length) {
+    const heading = document.createElement("div");
+    heading.className = "history-heading";
+    heading.textContent = "resolved";
+    main.appendChild(heading);
+    state.history.forEach(h => {
+      const row = document.createElement("div");
+      row.className = "history-item";
+      row.innerHTML = `
+        <span class="status-dot ${h.status === "approved" ? "approved" : "declined"}"></span>
+        <span class="tn">${h.tool_name}</span>
+        <span>${h.status}</span>
+        <span class="sess">${h.sessionId}</span>
+      `;
+      main.appendChild(row);
+    });
+  }
+}
+
+/* ---------------- input wiring ---------------- */
+
+composer.addEventListener("submit", e => {
+  e.preventDefault();
+  const text = input.value.trim();
+  if (!text) return;
+  input.value = "";
+  addMsg("user", text);
+
+  if (state.step === "business_name") { setInputEnabled(false); afterBusinessName(text); }
+  else if (state.step === "skills") { afterSkill(text); }
+  else if (state.step === "confirm") { setInputEnabled(false); agen("Tell me more and I'll update the plan before asking again.").then(() => summarizeAndAsk()); }
+  else { setInputEnabled(false); agen("One moment.", 200); }
+});
+
+/* ---------------- tabs ---------------- */
+
+function showView(name) {
+  document.getElementById("viewChat").classList.toggle("active", name === "chat");
+  document.getElementById("viewReview").classList.toggle("active", name === "review");
+  document.getElementById("tabChatBtn").classList.toggle("active", name === "chat");
+  document.getElementById("tabReviewBtn").classList.toggle("active", name === "review");
+  if (name === "review") renderReview();
+}
+
+begin();
+renderReview();
+</script>
